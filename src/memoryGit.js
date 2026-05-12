@@ -18,7 +18,9 @@ class MemoryGit {
   }
 
   log() {
-    return this.commits;
+    return {
+      all: this.commits
+    };
   }
 }
 

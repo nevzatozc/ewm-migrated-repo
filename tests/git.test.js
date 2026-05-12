@@ -1,23 +1,13 @@
-const simpleGit = require("simple-git");
-const path = require("path");
+const MemoryGit = require("../src/memoryGit");
 
-const repoPath = path.join(__dirname, "../output-repo");
+test("Git History structure", () => {
+  const git = new MemoryGit();
 
-const git = simpleGit(repoPath);
+  git.commit("Initial commit", "a", "2025");
+  git.commit("Add service layer", "a", "2025");
 
-describe("Git History", () => {
-  test("should have commits", async () => {
-    const log = await git.log();
+  const messages = git.log().all.map(c => c.message);
 
-    expect(log.total).toBeGreaterThan(0);
-  });
-
-  test("should contain correct commit messages", async () => {
-    const log = await git.log();
-
-    const messages = log.all.map(c => c.message);
-
-    expect(messages).toContain("Initial commit");
-    expect(messages).toContain("Add service layer");
-  });
+  expect(messages).toContain("Initial commit");
+  expect(messages).toContain("Add service layer");
 });

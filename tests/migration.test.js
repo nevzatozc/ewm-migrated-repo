@@ -1,13 +1,18 @@
 const { migrate } = require("../src/migrationService");
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+test("migration works", async () => {
+  const git = await migrate({ skipPush: true });
+  expect(git).toBeDefined();
+});
 
 test("should migrate safely without pushing", async () => {
   const git = await migrate({
     skipPush: true
   });
 
-  expect(git).toBeDefined();
+  const log = git.log();
 
-  if (git.log) {
-    expect(git.log().length).toBeGreaterThan(0);
-  }
+  expect(log.all.length).toBeGreaterThan(0);
 });
