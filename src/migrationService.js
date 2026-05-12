@@ -1,73 +1,50 @@
-const fs = require("fs-extra");
-const path = require("path");
+const { createGit } = require("./gitFactory");
+const { getChangesets } = require("./ewmClient");
 
-const ewmClient = require("./ewmClient");
-const gitService = require("./gitService");
-
-const OUTPUT_DIR = path.join(
-  __dirname,
-  "..",
-  "output-repo"
-);
-
-const REMOTE_URL =
-  "git@github.com:nevzatozc/ewm-migrated-repo.git";
-
-async function migrate() {
-  const changesets =
-    await ewmClient.getChangesets();
-
-  await fs.ensureDir(OUTPUT_DIR);
-
-  await gitService.initRepo(
-    OUTPUT_DIR
-  );
+async function migrate(options = {}) {
+  const git = createGit();
+  const changesets = await getChangesets();
 
   for (const change of changesets) {
-    console.log(
-      `Applying changeset ${change.id}`
-    );
+    applyChangeset(git, change);
+  }
 
-    for (const file of change.files) {
-      const targetPath = path.join(
-        OUTPUT_DIR,
-        file.path
-      );
+  const shouldSkipPush =
+    options.skipPush === true ||
+    process.env.NODE_ENV === "test" ||
+    process.env.CI === "true";
 
-      await fs.outputFile(
-        targetPath,
-        file.content
-      );
+  if (!shouldSkipPush) {
+    await safePush(git);
+  } else {
+    console.log("Skipping push (test/ci mode)");
+  }
+
+  return git;
+}
+
+function applyChangeset(git, change) {
+  console.log(`Applying changeset ${change.id}`);
+
+  for (const file of change.files) {
+    if (git.addFile) {
+      git.addFile(file.path, file.content);
     }
+  }
 
-    await gitService.commitAll(
-      OUTPUT_DIR,
+  if (git.commit) {
+    git.commit(
       change.message,
       change.author,
       change.date
     );
   }
-
-  // branch rename
-  const simpleGit = require("simple-git");
-  const git = simpleGit(OUTPUT_DIR);
-
-  await git.branch(["-M", "main"]);
-
-  // remote
-  await gitService.setupRemote(
-    OUTPUT_DIR,
-    REMOTE_URL
-  );
-
-  // push
-  await gitService.push(OUTPUT_DIR);
-
-  console.log(
-    "Migration + Push completed"
-  );
 }
 
-module.exports = {
-  migrate,
-};
+async function safePush(git) {
+  if (!git.push) return;
+
+  await git.push("origin", "main");
+}
+
+module.exports = { migrate };
