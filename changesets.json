@@ -1,0 +1,78 @@
+[
+  {
+    "id": 1,
+    "author": "ahmet",
+    "message": "Initial JS and C application",
+    "date": "2025-01-01T10:00:00",
+    "files": [
+      {
+        "path": "js/app.js",
+        "content": "console.log('version 1');"
+      },
+      {
+        "path": "js/service.js",
+        "content": "module.exports = { getMessage: () => 'service ready' };"
+      },
+      {
+        "path": "c/main.c",
+        "content": "#include <stdio.h>\n\nint main() {\n    printf(\"C application version 1\\n\");\n    return 0;\n}"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "author": "mehmet",
+    "message": "Add JS service layer and C utility",
+    "date": "2025-01-02T11:00:00",
+    "files": [
+      {
+        "path": "js/service.js",
+        "content": "module.exports = { getMessage: () => 'service ready' };"
+      },
+      {
+        "path": "c/utils.c",
+        "content": "#include <stdio.h>\n\nvoid print_status() {\n    printf(\"Utility module ready\\n\");\n}"
+      },
+      {
+        "path": "c/utils.h",
+        "content": "#ifndef UTILS_H\n#define UTILS_H\n\nvoid print_status();\n\n#endif"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "author": "ahmet",
+    "message": "Update JS app and integrate C utility",
+    "date": "2025-01-03T12:00:00",
+    "files": [
+      {
+        "path": "js/app.js",
+        "content": "const service = require('./service');\n\nconsole.log('version 2');\nconsole.log(service.getMessage());"
+      },
+      {
+        "path": "c/main.c",
+        "content": "#include <stdio.h>\n#include \"utils.h\"\n\nint main() {\n    printf(\"C application version 2\\n\");\n    print_status();\n    return 0;\n}"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "author": "mehmet",
+    "message": "Refactor C application and add math module",
+    "date": "2025-01-04T13:00:00",
+    "files": [
+      {
+        "path": "c/math.c",
+        "content": "#include \"math.h\"\n\nint add(int a, int b) {\n    return a + b;\n}"
+      },
+      {
+        "path": "c/math.h",
+        "content": "#ifndef MATH_H\n#define MATH_H\n\nint add(int a, int b);\n\n#endif"
+      },
+      {
+        "path": "c/main.c",
+        "content": "#include <stdio.h>\n#include \"utils.h\"\n#include \"math.h\"\n\nint main() {\n    printf(\"C application version 3\\n\");\n    print_status();\n\n    int result = add(5, 7);\n    printf(\"Addition result: %d\\n\", result);\n\n    return 0;\n}"
+      }
+    ]
+  }
+]
