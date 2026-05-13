@@ -46,30 +46,39 @@ jobs:
 
       - name: Detect C files
         run: |
-          C_FILES=$(find . -name "*.c")
-          echo "C files found:"
-          echo "$C_FILES"
+          echo "Scanning for C files..."
+          find . -name "*.c"
+          find . -name "*.h"
 
-      - name: Compile C Application Safely
+      - name: Compile C Application
         run: |
           mkdir -p build
 
           C_FILES=$(find . -name "*.c")
 
           if [ -z "$C_FILES" ]; then
-            echo "No C files found, skipping build"
-            exit 0
+            echo "ERROR: No C source files found"
+            exit 1
           fi
+
+          echo "Compiling:"
+          echo "$C_FILES"
 
           gcc $C_FILES -o build/app
 
-      - name: Run C Application (safe)
+      - name: Verify Binary
         run: |
-          if [ -f build/app ]; then
-            ./build/app
-          else
-            echo "No binary to run"
+          if [ ! -f build/app ]; then
+            echo "ERROR: build/app was not created"
+            exit 1
           fi
+
+          echo "Binary created successfully"
+
+      - name: Run C Application
+        run: |
+          chmod +x build/app
+          ./build/app
 
   migration-validation:
     name: Migration Validation
