@@ -10,6 +10,10 @@
         "content": "console.log('version 1');"
       },
       {
+        "path": "js/service.js",
+        "content": "module.exports = { getMessage: () => 'service ready' };"
+      },
+      {
         "path": "c/main.c",
         "content": "#include <stdio.h>\n\nint main() {\n    printf(\"C application version 1\\n\");\n    return 0;\n}"
       }
@@ -23,7 +27,7 @@
     "files": [
       {
         "path": "js/service.js",
-        "content": "module.exports = {\n  getMessage: () => 'service ready'\n};"
+        "content": "module.exports = { getMessage: () => 'service ready' };"
       },
       {
         "path": "c/utils.c",

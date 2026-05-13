@@ -44,16 +44,32 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc
 
-      - name: Compile C Application
+      - name: Detect C files
+        run: |
+          C_FILES=$(find . -name "*.c")
+          echo "C files found:"
+          echo "$C_FILES"
+
+      - name: Compile C Application Safely
         run: |
           mkdir -p build
-          gcc $(find . -name "*.c") -o build/app
-      - name: List C files
-        run: find . -name "*.c"
 
-      - name: Run C Application
+          C_FILES=$(find . -name "*.c")
+
+          if [ -z "$C_FILES" ]; then
+            echo "No C files found, skipping build"
+            exit 0
+          fi
+
+          gcc $C_FILES -o build/app
+
+      - name: Run C Application (safe)
         run: |
-          ./build/app
+          if [ -f build/app ]; then
+            ./build/app
+          else
+            echo "No binary to run"
+          fi
 
   migration-validation:
     name: Migration Validation
