@@ -35,9 +35,24 @@ jobs:
     name: C Build Pipeline
     runs-on: ubuntu-latest
 
+    env:
+      NODE_ENV: test
+      CI: true
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Migration Engine
+        run: node src/index.js
 
       - name: Install GCC
         run: |
@@ -47,14 +62,14 @@ jobs:
       - name: Detect C files
         run: |
           echo "Scanning for C files..."
-          find . -name "*.c"
-          find . -name "*.h"
+          find output-repo -name "*.c"
+          find output-repo -name "*.h"
 
       - name: Compile C Application
         run: |
           mkdir -p build
 
-          C_FILES=$(find . -name "*.c")
+          C_FILES=$(find output-repo -name "*.c")
 
           if [ -z "$C_FILES" ]; then
             echo "ERROR: No C source files found"
@@ -65,15 +80,6 @@ jobs:
           echo "$C_FILES"
 
           gcc $C_FILES -o build/app
-
-      - name: Verify Binary
-        run: |
-          if [ ! -f build/app ]; then
-            echo "ERROR: build/app was not created"
-            exit 1
-          fi
-
-          echo "Binary created successfully"
 
       - name: Run C Application
         run: |
