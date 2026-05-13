@@ -16,7 +16,6 @@ test("should migrate safely without pushing and produce commits", async () => {
     skipPush: true
   });
 
-  // commit log kontrolü (log mock değilse güvenli fallback)
   if (!git.log) {
     throw new Error("git.log is not implemented in gitFactory mock");
   }

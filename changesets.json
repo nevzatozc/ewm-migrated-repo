@@ -57,8 +57,8 @@
   },
   {
     "id": 4,
-    "author": "mehmet",
-    "message": "Refactor C application and add math module",
+    "author": "cevdet",
+    "message": "Refactor",
     "date": "2025-01-04T13:00:00",
     "files": [
       {
@@ -71,19 +71,7 @@
       },
       {
         "path": "c/main.c",
-        "content": "#include <stdio.h>\n#include \"utils.h\"\n#include \"math.h\"\n\nint main() {\n    printf(\"C application version 4\\n\");\n    print_status();\n\n    int result = add(5, 7);\n    printf(\"Addition result: %d\\n\", result);\n\n    return 0;\n}"
-      }
-    ]
-  },
-  {
-    "id": 4,
-    "author": "nevzat",
-    "message": "Initial JS and C application",
-    "date": "2024-02-01T10:00:00",
-    "files": [
-      {
-        "path": "js/app.js",
-        "content": "console.log('version 111');"
+        "content": "#include <stdio.h>\n#include \"utils.h\"\n#include \"math.h\"\n\nint main() {\n    printf(\"C application version 4\\n\");\n    print_status();\n\n    int result = add(7, 7);\n    printf(\"Addition result: %d\\n\", result);\n\n    return 0;\n}"
       }
     ]
   }
