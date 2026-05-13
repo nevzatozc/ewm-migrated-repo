@@ -47,7 +47,9 @@ jobs:
       - name: Compile C Application
         run: |
           mkdir -p build
-          gcc c/main.c c/utils.c c/math.c -o build/app
+          gcc $(find . -name "*.c") -o build/app
+      - name: List C files
+        run: find . -name "*.c"
 
       - name: Run C Application
         run: |
