@@ -6,8 +6,8 @@ test("should return valid changesets with correct structure", async () => {
   // 1. basic existence check
   expect(Array.isArray(data)).toBe(true);
 
-  // 2. expected count (şu an 3 changeset bekliyoruz)
-  expect(data.length).toBe(3);
+  // 2. expected count (şu an 4 changeset bekliyoruz)
+  expect(data.length).toBe(4);
 
   // 3. structure validation
   for (const changeset of data) {
