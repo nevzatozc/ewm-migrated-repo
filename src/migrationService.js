@@ -5,6 +5,8 @@ async function migrate(options = {}) {
   const git = createGit();
   const changesets = await getChangesets();
 
+  console.log(`Loaded ${changesets.length} changesets`);
+
   for (const change of changesets) {
     applyChangeset(git, change);
   }
@@ -24,27 +26,52 @@ async function migrate(options = {}) {
 }
 
 function applyChangeset(git, change) {
-  console.log(`Applying changeset ${change.id}`);
+  console.log(`\n=== Applying changeset ${change.id} ===`);
+
+  if (!change.files || change.files.length === 0) {
+    console.log(`WARNING: changeset ${change.id} has no files`);
+    return;
+  }
 
   for (const file of change.files) {
+    console.log(`Writing file: ${file.path}`);
+
+    if (!file.path || !file.content) {
+      console.log(`INVALID FILE ENTRY in changeset ${change.id}`);
+      continue;
+    }
+
     if (git.addFile) {
       git.addFile(file.path, file.content);
+    } else {
+      console.log("git.addFile is missing!");
     }
   }
 
   if (git.commit) {
+    console.log(`Committing changeset ${change.id}`);
     git.commit(
       change.message,
       change.author,
       change.date
     );
+  } else {
+    console.log("git.commit is missing!");
   }
 }
 
 async function safePush(git) {
-  if (!git.push) return;
+  if (!git.push) {
+    console.log("git.push not available, skipping push");
+    return;
+  }
 
-  await git.push("origin", "main");
+  try {
+    await git.push("origin", "main");
+    console.log("Push successful");
+  } catch (err) {
+    console.log("Push failed:", err.message);
+  }
 }
 
 module.exports = { migrate };
