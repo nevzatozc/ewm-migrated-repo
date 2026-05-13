@@ -1,23 +1,77 @@
-name: CI
+name: Polyglot Migration CI
 
 on:
   push:
+    branches:
+      - main
+      - develop
   pull_request:
 
 jobs:
-  test:
+  node-tests:
+    name: Node.js Tests
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+    env:
+      NODE_ENV: test
+      CI: true
 
-      - uses: actions/setup-node@v4
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - run: npm install
+      - name: Install Dependencies
+        run: npm install
 
-      - run: npm test
-        env:
-          NODE_ENV: test
-          CI: true
+      - name: Run Jest Tests
+        run: npm test
+
+  c-build:
+    name: C Build Pipeline
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install GCC
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc
+
+      - name: Compile C Application
+        run: |
+          mkdir -p build
+          gcc c/main.c c/utils.c c/math.c -o build/app
+
+      - name: Run C Application
+        run: |
+          ./build/app
+
+  migration-validation:
+    name: Migration Validation
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      CI: true
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Migration Engine
+        run: node src/index.js
