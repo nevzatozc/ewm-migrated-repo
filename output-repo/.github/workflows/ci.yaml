@@ -1,0 +1,110 @@
+name: Polyglot Migration CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+
+jobs:
+  node-tests:
+    name: Node.js Tests
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      CI: true
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Jest Tests
+        run: npm test
+
+  c-build:
+    name: C Build Pipeline
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      CI: true
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Migration Engine
+        run: node src/index.js
+
+      - name: Install GCC
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc
+
+      - name: Detect C files
+        run: |
+          echo "Scanning for C files..."
+          find output-repo -name "*.c"
+          find output-repo -name "*.h"
+
+      - name: Compile C Application
+        run: |
+          mkdir -p build
+
+          C_FILES=$(find output-repo -name "*.c")
+
+          if [ -z "$C_FILES" ]; then
+            echo "ERROR: No C source files found"
+            exit 1
+          fi
+
+          echo "Compiling:"
+          echo "$C_FILES"
+
+          gcc $C_FILES -o build/app
+
+      - name: Run C Application
+        run: |
+          chmod +x build/app
+          ./build/app
+
+  migration-validation:
+    name: Migration Validation
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      CI: true
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Migration Engine
+        run: node src/index.js
