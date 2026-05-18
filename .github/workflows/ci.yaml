@@ -7,7 +7,12 @@ on:
       - develop
   pull_request:
 
+concurrency:
+  group: polyglot-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+
   node-tests:
     name: Node.js Tests
     runs-on: ubuntu-latest
@@ -24,15 +29,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run Jest Tests
         run: npm test
 
-  c-build:
-    name: C Build Pipeline
+  migration-engine-validation:
+    name: Migration Engine Validation
     runs-on: ubuntu-latest
 
     env:
@@ -47,25 +53,92 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run Migration Engine
         run: node src/index.js
 
-      - name: Install GCC
+      - name: Validate Output Repository
+        run: |
+          echo "Checking generated repository..."
+
+          if [ ! -d "output-repo" ]; then
+            echo "ERROR: output-repo not generated"
+            exit 1
+          fi
+
+          FILE_COUNT=$(find output-repo -type f | wc -l)
+
+          echo "Generated file count: $FILE_COUNT"
+
+          if [ "$FILE_COUNT" -eq 0 ]; then
+            echo "ERROR: output-repo is empty"
+            exit 1
+          fi
+
+      - name: Upload Migration Output
+        uses: actions/upload-artifact@v4
+        with:
+          name: migrated-output
+          path: output-repo
+
+  c-cross-platform-build:
+    name: C Cross Platform Build
+    needs:
+      - node-tests
+      - migration-engine-validation
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    runs-on: ${{ matrix.os }}
+
+    env:
+      NODE_ENV: test
+      CI: true
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Migration Engine
+        run: node src/index.js
+
+      ####################################################################
+      # LINUX BUILD
+      ####################################################################
+
+      - name: Install GCC (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc
+          sudo apt-get install -y gcc make cmake
 
-      - name: Detect C files
+      - name: Detect C Files (Linux)
+        if: runner.os == 'Linux'
         run: |
           echo "Scanning for C files..."
           find output-repo -name "*.c"
           find output-repo -name "*.h"
 
-      - name: Compile C Application
+      - name: Compile C Application (Linux)
+        if: runner.os == 'Linux'
         run: |
           mkdir -p build
 
@@ -81,30 +154,86 @@ jobs:
 
           gcc $C_FILES -o build/app
 
-      - name: Run C Application
+      - name: Run C Application (Linux)
+        if: runner.os == 'Linux'
         run: |
           chmod +x build/app
           ./build/app
 
-  migration-validation:
-    name: Migration Validation
+      ####################################################################
+      # WINDOWS BUILD
+      ####################################################################
+
+      - name: Setup MSVC
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Detect C Files (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Write-Host "Scanning for C files..."
+
+          Get-ChildItem -Recurse output-repo *.c
+          Get-ChildItem -Recurse output-repo *.h
+
+      - name: Compile C Application (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force build
+
+          $files = Get-ChildItem -Recurse output-repo *.c
+
+          if ($files.Count -eq 0) {
+            Write-Host "ERROR: No C source files found"
+            exit 1
+          }
+
+          $filePaths = $files.FullName
+
+          cl.exe $filePaths /Fe:build\app.exe
+
+      - name: Run C Application (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          .\build\app.exe
+
+      ####################################################################
+      # ARTIFACTS
+      ####################################################################
+
+      - name: Upload Linux Artifact
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: build/app
+
+      - name: Upload Windows Artifact
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: build/app.exe
+
+  migration-report:
+    name: Migration Report
+    needs:
+      - c-cross-platform-build
+
     runs-on: ubuntu-latest
 
-    env:
-      NODE_ENV: test
-      CI: true
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Run Migration Engine
-        run: node src/index.js
+      - name: Generate Report
+        run: |
+          echo "=================================="
+          echo " Polyglot Migration Pipeline"
+          echo "=================================="
+          echo "Migration completed successfully"
+          echo "Cross-platform validation passed"
+          echo "Linux build successful"
+          echo "Windows build successful"
+          echo "Artifacts generated"
+          echo "=================================="

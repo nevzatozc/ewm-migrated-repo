@@ -1,1 +1,0 @@
-module.exports = { getMessage: () => 'service ready' };

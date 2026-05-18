@@ -71,7 +71,7 @@
       },
       {
         "path": "c/main.c",
-        "content": "#include <stdio.h>\n#include \"utils.h\"\n#include \"math.h\"\n\nint main() {\n    printf(\"C application version 4\\n\");\n    print_status();\n\n    int result = add(7, 7);\n    printf(\"Addition result: %d\\n\", result);\n\n    return 0;\n}"
+        "content": "#include <stdio.h>\n#include \"utils.h\"\n#include \"math.h\"\n\nint main() {\n    printf(\"C application version 3\\n\");\n    print_status();\n\n    int result = add(7, 7);\n    printf(\"Addition result: %d\\n\", result);\n\n    return 0;\n}"
       }
     ]
   }
